@@ -30,142 +30,105 @@ class ImageHandler:
     def data(self):
         return self.img
 
-    def find_pixel(self, x, y):
-        if self.width >= x and self.height >= y:
-            return self.img[y][x]
+    def virus(self, upper_corner, lower_corner, upper_intensity=150, lower_intensity=100):
+        start = time.time()
 
-    def square_image(self, corner_1, corner_2, convert_to_np=True):
+        print('Starting search...')
 
-        final_array = []
-        pixels = []
+        x1, y1 = upper_corner
+        x2, y2 = lower_corner
 
-        c1_x = corner_1[0]
-        c1_y = corner_1[1]
+        image = self.img[y1:y2, x1:x2]
 
-        c2_x = corner_2[0]
-        c2_y = corner_2[1]
+        shipborders = []
+        ships = []
 
-        max_h = max(c2_y, c1_y)
-        max_w = max(c2_x, c1_x)
+        directions = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1)]
 
-        i_x = min(c2_x, c1_x)
-        i_y = min(c2_y, c1_y)
+        for cy, y in enumerate(image):
 
-        while i_x <= max_w and i_y <= max_h:
+            whitelist = []
+            blacklist = []
 
-            pixels.append(self.find_pixel(i_x, i_y))
-            if i_x == max_w:
-                # Appends the pixels
-                final_array.append(pixels)
-                # Resets the array
-                pixels = []
-                # New y direction to check
-                i_y += 1
-                # Resets i_x so it can loop through the new y direction
-                i_x = min(c2_x, c1_x)
-            else:
-                i_x += 1
+            for cx, x in enumerate(y):
 
-        if convert_to_np:
-            np_array = np.array(final_array, dtype=float)
-            return np_array
-        else:
-            return final_array
+                if x > upper_intensity:
+                    if not any((cx, cy) in ship for ship in ships):
 
-imh = ImageHandler('s1a-iw-grd-vh-20160822t170151-20160822t170216-012716-013ff7-002.tiff')
+                        whitelist.append((cx, cy))
 
+                        while True:
+                            for coords in whitelist:
 
-def virus(image, upper_intensity = 150, lower_intensity = 100):
-    start = time.time()
+                                wx, wy = coords
 
-    print('Starting search...')
+                                for direction in directions:
+                                    dy, dx = direction
 
-    shipborders = []
-    ships = []
+                                    try:
+                                        if image[wy + dy][wx + dx] >= lower_intensity:
+                                            if (wx + dx, wy + dy) not in whitelist:
+                                                whitelist.append((wx + dx, wy + dy))
 
-    directions = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1)]
+                                        else:
+                                            if (wx + dx, wy + dy) not in blacklist:
+                                                blacklist.append((wx + dx, wy + dy))
 
-    for cy, y in enumerate(image):
+                                    except IndexError:
+                                        pass
+                            else:
+                                break
 
-        whitelist = []
-        blacklist = []
-
-        for cx, x in enumerate(y):
-
-            if x > upper_intensity:
-                if not any((cx, cy) in ship for ship in ships):
-
-                    whitelist.append((cx, cy))
-
-                    while True:
-                        for coords in whitelist:
-
-                            wx, wy = coords
-
-                            for direction in directions:
-                                dy, dx = direction
-
-                                try:
-                                    if image[wy+dy][wx+dx] >= lower_intensity:
-                                        if (wx+dx, wy+dy) not in whitelist:
-
-                                            whitelist.append((wx+dx, wy+dy))
-
-                                    else:
-                                        if (wx + dx, wy + dy) not in blacklist:
-
-                                            blacklist.append((wx + dx, wy + dy))
-
-                                except IndexError:
-                                    pass
-                        else:
-                            break
-
-                    ships.append(whitelist)
-                    shipborders.append(blacklist)
-                    print('=> Possible ship has been located')
+                        ships.append(whitelist)
+                        shipborders.append(blacklist)
+                        print('=> Possible ship has been located')
 
         end = time.time()
 
-    return ships, shipborders, print(str(len(ships)) + " ships found in " + str(end - start) + " seconds")
+        return ships, shipborders, print(str(len(ships)) + " ships found in " + str(end - start) + " seconds")
 
+    def kassertilnicolai(self, upper_corner, lower_corner, upper_intensity=150, lower_intensity=100):
+        kasser = []
+        ships, shipborders, nothing = self.virus(upper_corner, lower_corner, upper_intensity=150, lower_intensity=100)
+        for borders in shipborders:
+            max_x = max(borders, key=lambda item: item[0])[0]
+            min_x = min(borders, key=lambda item: item[0])[0]
 
-def kassertilnicolai(image, upper_intensity = 150, lower_intensity = 100):
-    kasser = []
-    ships, shipborders, nothing = virus(image, upper_intensity = 150, lower_intensity = 100)
-    for borders in shipborders:
-        max_x = max(borders, key=lambda item: item[0])[0]
-        min_x = min(borders, key=lambda item: item[0])[0]
+            max_y = max(borders, key=lambda item: item[1])[1]
+            min_y = min(borders, key=lambda item: item[1])[1]
 
-        max_y = max(borders, key=lambda item: item[1])[1]
-        min_y = min(borders, key=lambda item: item[1])[1]
+            kasser.append([(min_x, min_y), (max_x, max_y)])
+        return kasser
 
-        kasser.append([(min_x, min_y), (max_x, max_y)])
-    return kasser
+    def plotkasser(self, upper_corner, lower_corner, upper_intensity=150, lower_intensity=100):
+        kasser = self.kassertilnicolai(upper_corner, lower_corner, upper_intensity=150, lower_intensity=100)
+        print('Plotting...')
+        image = self.img
+        for i, coords in enumerate(kasser):
+            upper, lower = coords
+            x1, y1 = upper
+            x2, y2 = lower
+            plt.subplot(2, 1, i+1)
+            plt.imshow(image[y1:y2, x1:x2], cmap='gray')
+        plt.show()
 
+    def plotborders(self, upper_corner, lower_corner, upper_intensity=150, lower_intensity=100):
+        ships, shipborders, nothing = self.virus(upper_corner, lower_corner, upper_intensity=150, lower_intensity=100)
+        print('Plotting...')
+        image = self.img
+        for ship in shipborders:
+            for coords in ship:
+                x, y = coords
+                image[y][x] = 500
+        x1, y1 = upper_corner
+        x2, y2 = lower_corner
+        imageshow = self.img[y1:y2, x1:x2]
+        plt.imshow(imageshow, cmap='gray')
+        plt.show()
 
+img = ImageHandler('s1a-iw-grd-vh-20160822t170151-20160822t170216-012716-013ff7-002.tiff')
 
-
-
-#image = imh.square_image((9523-30, 805+30), (9960+30, 365-20),convert_to_np=False)
-image = imh.square_image((0, 0), (5000, 5000),convert_to_np=False)
-
-kasser = kassertilnicolai(image)
-
-print(kasser)
-"""
-for i in range(len(shipborders)):
-    for ele in shipborders[i]:
-        x, y = ele
-        image[y][x] = 400
-"""
-
-x_kasse, y_kasse = kasser[0]
-
-kasse = imh.square_image(x_kasse, y_kasse)
-
-plt.imshow(kasse,cmap='gray')
-plt.show()
+img.plotkasser((0,0),(5000,5000))
 
 
 
