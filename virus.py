@@ -192,6 +192,8 @@ def datasplitter(sens):
             corners.append([(x*sens - 25,y*sens - 25), (x * sens + sens + 25, y * sens + sens + 25)])
     return corners
 
+
+
 coords = datasplitter(200)
 print(coords)
 
