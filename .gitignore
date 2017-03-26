@@ -158,3 +158,5 @@ ENV/
 # End of https://www.gitignore.io/api/python,intellij
 
 .idea
+Data
+*.tiff

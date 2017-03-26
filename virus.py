@@ -2,6 +2,7 @@ import numpy as np
 import tifffile as tiff
 import matplotlib.pyplot as plt
 import time
+import os
 
 class ImageHandler:
     def __init__(self, f):
@@ -127,8 +128,71 @@ class ImageHandler:
         plt.show()
 
 img = ImageHandler('s1a-iw-grd-vh-20160822t170151-20160822t170216-012716-013ff7-002.tiff')
+data = img.data()
 
-img.plotkasser((0,0),(5000,5000))
 
+
+
+def globalref(data, n):
+    #data er hele billedet, n er hvor fin detectionen skal være
+    ref = np.array([])
+    for i in range(int(len(data[0,:])/n)):
+        for k in range(int(len(data[:,0])/n)):
+            if data[k*n,i*n] > 10:
+                ref = np.append(ref,data[k*n,i*n])
+    return ref
+
+
+
+""""
+ref = globalref(data,25)
+plt.hist(ref,bins=200)
+plt.show()
+"""
+
+""""
+def datasplitter(data, sens):
+    corners = []
+    for x in range(25,int(len(data[:, 0]) / sens)):
+        for y in range(25,int(len(data[0,:])/sens)):
+            if x * sens +sens
+            corners.append([(x*sens,y*sens),(x*sens+sens,y*sens+sens)])
+    return corners
+print(datasplitter(data,300))
+"""
+
+def datasplitter(sens):
+    corners = []
+    for x in range(25,int(600/ sens)):
+        for y in range(25,int(600/sens)):
+
+            #Ændrer corners der kun overskrider x aksen en lille smule
+            if x * sens + sens + 25 > len(data[:,0]) and (x * sens + sens + 25 - len(data[:,0])) < (0.3 * sens) and (y * sens + sens + 25) <= len(data[0,:]):
+                corners.append([(x * sens - 25, y * sens - 25), (len(data[:,0]), y * sens + sens + 25)])
+                break
+
+            #Ændrer corners der er tæt på x aksen
+            if x * sens + sens + 25 < len(data[:, 0]) and (len(data[:, 0]) - x * sens + sens + 25 ) <= (0.7 * sens) and (y * sens + sens + 25) <= len(data[0,:]):
+                corners.append([(x * sens - 25, y * sens - 25), (len(data[:, 0]), y * sens + sens + 25)])
+                break
+
+            #Ændrer corners der kun overskrider y aksen en lille smule
+            if y * sens + sens + 25 > len(data[0,:]) and (y * sens + sens + 25 - len(data[0,:])) < (0.3 * sens) and (x * sens + sens + 25) <= len(data[:,0]):
+                corners.append([(x * sens - 25, y * sens - 25), (x * sens + sens + 25, len(data[0,:]))])
+                break
+
+            #Ændrer corners der er tæt på y aksen
+            if y * sens + sens + 25 < len(data[0, ;]) and (len(data[0,;]) - y * sens + sens + 25) <= (0.7 * sens) and (x * sens + sens + 25) <= len(data[:,0]):
+                corners.append([(x * sens - 25, y * sens - 25), (len(data[:, 0]), y * sens + sens + 25)])
+                break
+
+
+
+
+            corners.append([(x*sens - 25,y*sens - 25), (x * sens + sens + 25, y * sens + sens + 25)])
+    return corners
+
+coords = datasplitter(200)
+print(coords)
 
 
