@@ -161,40 +161,76 @@ def datasplitter(data, sens):
 print(datasplitter(data,300))
 """
 
-def datasplitter(sens):
+def datasplitter(data , sens):
     corners = []
-    for x in range(25,int(600/ sens)):
-        for y in range(25,int(600/sens)):
+    width = len(data[:,0])
+    height = len(data[0,:])
 
-            #Ændrer corners der kun overskrider x aksen en lille smule
-            if x * sens + sens + 25 > len(data[:,0]) and (x * sens + sens + 25 - len(data[:,0])) < (0.3 * sens) and (y * sens + sens + 25) <= len(data[0,:]):
-                corners.append([(x * sens - 25, y * sens - 25), (len(data[:,0]), y * sens + sens + 25)])
-                break
+    for x in range(math.ceil(width / sens)):
+        for y in range(math.ceil(height / sens)):
 
-            #Ændrer corners der er tæt på x aksen
-            if x * sens + sens + 25 < len(data[:, 0]) and (len(data[:, 0]) - x * sens + sens + 25 ) <= (0.7 * sens) and (y * sens + sens + 25) <= len(data[0,:]):
-                corners.append([(x * sens - 25, y * sens - 25), (len(data[:, 0]), y * sens + sens + 25)])
-                break
+            # Ændrer corners der overskriver x og y aksen
+            if (x * sens + sens) > width and (y * sens + sens) > height:
+                corners.append([[width - 25 - sens, height - 25 - sens], [width, height]])
+                continue
 
-            #Ændrer corners der kun overskrider y aksen en lille smule
-            if y * sens + sens + 25 > len(data[0,:]) and (y * sens + sens + 25 - len(data[0,:])) < (0.3 * sens) and (x * sens + sens + 25) <= len(data[:,0]):
-                corners.append([(x * sens - 25, y * sens - 25), (x * sens + sens + 25, len(data[0,:]))])
-                break
+            # Ændrer corners der kun overskrider x aksen en lille smule
+            if x * sens + sens + 25 > width and (x * sens + sens - width) < (0.3 * sens) and (
+                        y * sens + sens + 25) <= height:
+                corners.append([[x * sens - 25, y * sens - 25], [width, y * sens + sens + 25]])
 
-            #Ændrer corners der er tæt på y aksen
-            if y * sens + sens + 25 < len(data[0, ;]) and (len(data[0,;]) - y * sens + sens + 25) <= (0.7 * sens) and (x * sens + sens + 25) <= len(data[:,0]):
-                corners.append([(x * sens - 25, y * sens - 25), (len(data[:, 0]), y * sens + sens + 25)])
-                break
+                print("overskrider x lidt")
+                continue
 
+            # Ændrer corners der er tæt på x aksen
+            if x * sens + sens + 25 < width and width - (x * sens + sens + 25) <= (0.7 * sens) and (
+                        y * sens + sens + 25) <= height:
+                corners.append([[x * sens - 25, y * sens - 25], [width, y * sens + sens + 25]])
 
+                print("overskrider x")
+                continue
 
+            # Ændrer corners der kun overskrider y aksen en lille smule
+            if y * sens + sens + 25 > height and (y * sens + sens - height) < (0.3 * sens) and (
+                        x * sens + sens ) <= width:
+                corners.append([[x * sens - 25, y * sens - 25], [x * sens + sens + 25, height]])
 
-            corners.append([(x*sens - 25,y*sens - 25), (x * sens + sens + 25, y * sens + sens + 25)])
+                print("overskrider y lidt")
+                continue
+
+            # Ændrer corners der er tæt på y aksen
+            if y * sens + sens + 25 < height and (height - (y * sens + sens + 25)) <= (0.7 * sens) and (
+                        x * sens + sens + 25) <= width:
+                corners.append([[x * sens - 25, y * sens - 25], [x * sens + sens + 25, height]])
+
+                print("overskrider y")
+                continue
+
+            # Fjerner overskydende
+            if (x * sens + sens + 25 - width) >= (0.3 * sens):
+                print("fjerner overskydende")
+                continue
+
+            if (y * sens + sens + 25 - height) >= (0.3 * sens):
+                print("fjerner overskydende")
+                continue
+
+            else:
+                print("else")
+                corners.append([[x * sens - 25, y * sens - 25], [x * sens + sens + 25, y * sens + sens + 25]])
+
+        for i in range(len(corners)):
+            for j in range(2):
+                for k in range(2):
+                    if corners[i][j][k] < 0:
+                        corners[i][j][k] = 0
+
+                    if corners[i][j][0] > width:
+                        corners[i][j][0] = width
+
+                    if corners[i][j][1] > height:
+                        corners[i][j][1] = height
+
     return corners
-
-
-
-coords = datasplitter(200)
-print(coords)
 
 
